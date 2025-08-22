@@ -1,6 +1,7 @@
 {
   "name": "markdown-rendersafe",
   "version": "1.0.0",
+  "type": "module",
   "description": "Fix broken markdown during streaming to ensure proper rendering",
   "keywords": [
     "markdown",
