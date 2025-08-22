@@ -4,23 +4,23 @@
  */
 const PUNCTUATION_RULES: Array<[RegExp, string]> = [
   // Convert bold markdown links to standard format (**[text](url)** → [**text**](url))
-  [/\*\*\[([^\]]+)\]\(([^)]+)\)\*\*/g, "[**$1**]($2)"],
+  [/\*\*\[([^\]]+)\]\(([^)]+)\)\*\*/g, '[**$1**]($2)'],
   // ASCII double quotes - limited to not cross newlines
   // [^"*\n] restricts newlines to prevent excessive matching
   [/\*\*"([^"*\n]+)"\*\*/g, '"**$1**"'],
   // ASCII single quotes - limited to not cross newlines
   [/\*\*'([^'*\n]+)'\*\*/g, "'**$1**'"],
   // Parentheses with space (e.g., **text (description)** → **text** (description))
-  [/\*\*([^*\n]+?)\s+(\([^*\n]+?\))\*\*/g, "**$1** $2"],
+  [/\*\*([^*\n]+?)\s+(\([^*\n]+?\))\*\*/g, '**$1** $2'],
   // Parentheses without space (e.g., **text(description)** → **text**(description))
-  [/\*\*([^*\n]+?)(\([^*\n]+?\))\*\*/g, "**$1**$2"],
+  [/\*\*([^*\n]+?)(\([^*\n]+?\))\*\*/g, '**$1**$2'],
   // Parentheses with trailing text (e.g., **text (description)**suffix → **text** (description)suffix)
-  [/\*\*([^*]+?)\s+(\([^*]+?\))\*\*([^\s*]+)/g, "**$1** $2$3"],
+  [/\*\*([^*]+?)\s+(\([^*]+?\))\*\*([^\s*]+)/g, '**$1** $2$3'],
   // Parentheses with trailing text - no space version
-  [/\*\*([^*]+?)(\([^*]+?\))\*\*([^\s*]+)/g, "**$1**$2$3"],
+  [/\*\*([^*]+?)(\([^*]+?\))\*\*([^\s*]+)/g, '**$1**$2$3'],
   // Percentage sign handling (e.g., **21%** → **21**%)
   // Use [^%]+? to prevent bold % only
-  [/\*\*([^%]+?)%\*\*/g, "**$1**%"],
+  [/\*\*([^%]+?)%\*\*/g, '**$1**%'],
 ];
 
 /**
@@ -30,21 +30,21 @@ const PUNCTUATION_RULES: Array<[RegExp, string]> = [
 const ITALIC_PUNCTUATION_RULES: Array<[RegExp, string]> = [
   // Convert italic markdown links to standard format (*[text](url)* → [*text*](url))
   // Use negative lookbehind to exclude **
-  [/(?<!\*)\*\[([^\]]+)\]\(([^)]+)\)\*(?!\*)/g, "[*$1*]($2)"],
+  [/(?<!\*)\*\[([^\]]+)\]\(([^)]+)\)\*(?!\*)/g, '[*$1*]($2)'],
   // ASCII double quotes - italic version
   [/(?<!\*)\*"([^"*\n]+)"\*(?!\*)/g, '"*$1*"'],
   // ASCII single quotes - italic version
   [/(?<!\*)\*'([^'*\n]+)'\*(?!\*)/g, "'*$1*'"],
   // Parentheses with space (e.g., *text (description)* → *text* (description))
-  [/(?<!\*)\*([^*\n]+?)\s+(\([^*\n]+?\))\*(?!\*)/g, "*$1* $2"],
+  [/(?<!\*)\*([^*\n]+?)\s+(\([^*\n]+?\))\*(?!\*)/g, '*$1* $2'],
   // Parentheses without space (e.g., *text(description)* → *text*(description))
-  [/(?<!\*)\*([^*\n]+?)(\([^*\n]+?\))\*(?!\*)/g, "*$1*$2"],
+  [/(?<!\*)\*([^*\n]+?)(\([^*\n]+?\))\*(?!\*)/g, '*$1*$2'],
   // Parentheses with trailing text (e.g., *text (description)*suffix → *text* (description)suffix)
-  [/(?<!\*)\*([^*]+?)\s+(\([^*]+?\))\*([^\s*]+)/g, "*$1* $2$3"],
+  [/(?<!\*)\*([^*]+?)\s+(\([^*]+?\))\*([^\s*]+)/g, '*$1* $2$3'],
   // Parentheses with trailing text - no space version
-  [/(?<!\*)\*([^*]+?)(\([^*]+?\))\*([^\s*]+)/g, "*$1*$2$3"],
+  [/(?<!\*)\*([^*]+?)(\([^*]+?\))\*([^\s*]+)/g, '*$1*$2$3'],
   // Percentage sign handling (e.g., *21%* → *21*%)
-  [/(?<!\*)\*([^%]+?)%\*(?!\*)/g, "*$1*%"],
+  [/(?<!\*)\*([^%]+?)%\*(?!\*)/g, '*$1*%'],
 ];
 
 /**
@@ -125,10 +125,10 @@ export function unbreak(markdown: string): string {
   let result = markdown;
 
   // Normalize Unicode quotes to ASCII
-  result = result.replaceAll("\u2018", "'");
-  result = result.replaceAll("\u2019", "'");
-  result = result.replaceAll("\u201C", '"');
-  result = result.replaceAll("\u201D", '"');
+  result = result.replaceAll('\u2018', "'");
+  result = result.replaceAll('\u2019', "'");
+  result = result.replaceAll('\u201C', '"');
+  result = result.replaceAll('\u201D', '"');
 
   // Simple approach: only convert **"text"** that comes after space or line start
   // This way "**text**" pattern is not converted
@@ -173,7 +173,7 @@ export function unbreak(markdown: string): string {
 
   // Remove incomplete image markdown
   for (const pattern of INCOMPLETE_IMAGE_PATTERNS) {
-    result = result.replace(pattern, "");
+    result = result.replace(pattern, '');
   }
 
   return result;
