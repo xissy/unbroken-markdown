@@ -1,0 +1,60 @@
+{
+  "name": "markdown-rendersafe",
+  "version": "1.0.0",
+  "description": "Fix broken markdown during streaming to ensure proper rendering",
+  "keywords": [
+    "markdown",
+    "streaming",
+    "formatting",
+    "typography",
+    "punctuation",
+    "renderer",
+    "fix",
+    "sanitize"
+  ],
+  "author": "Taeho Kim",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "bun run build:cjs && bun run build:esm && bun run build:types",
+    "build:cjs": "esbuild src/index.ts --bundle --platform=node --format=cjs --outfile=dist/index.js",
+    "build:esm": "esbuild src/index.ts --bundle --platform=node --format=esm --outfile=dist/index.mjs",
+    "build:types": "tsc --declaration --emitDeclarationOnly --outDir dist",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "bun run build && bun run test",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "esbuild": "^0.19.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/taehoio/harvest-monorepo.git",
+    "directory": "markdown-rendersafe"
+  },
+  "bugs": {
+    "url": "https://github.com/taehoio/harvest-monorepo/issues"
+  },
+  "homepage": "https://github.com/taehoio/harvest-monorepo/tree/main/markdown-rendersafe#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
