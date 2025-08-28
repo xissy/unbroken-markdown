@@ -21,6 +21,8 @@ const PUNCTUATION_RULES: Array<[RegExp, string]> = [
   // Percentage sign handling (e.g., **21%** → **21**%)
   // Use [^%]+? to prevent bold % only
   [/\*\*([^%]+?)%\*\*/g, '**$1**%'],
+  // Question mark handling (e.g., **text?** → **text**?)
+  [/\*\*([^?]+?)\?\*\*/g, '**$1**?'],
 ];
 
 /**
