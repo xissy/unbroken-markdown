@@ -261,5 +261,13 @@ Guillermo는 "**개발자가 새 노트북을 받을 때 느끼는 쾌적한 준
       const expected = '**Bold**% and *Italic*% text';
       expect(unbreak(input)).toBe(expected);
     });
+
+    test('should move question mark outside of bold markdown in Korean sentence', () => {
+      const input =
+        '마지막으로 등장하는 논의는 **LLM이 이미 자체적으로 문제 생성기를 만들고, 정답지도 만들 수 있다면 이런 데이터 변환의 실질적 가치는 무엇인가?**라는 물음이다.';
+      const expected =
+        '마지막으로 등장하는 논의는 **LLM이 이미 자체적으로 문제 생성기를 만들고, 정답지도 만들 수 있다면 이런 데이터 변환의 실질적 가치는 무엇인가**?라는 물음이다.';
+      expect(unbreak(input)).toBe(expected);
+    });
   });
 });
