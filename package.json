@@ -1,6 +1,6 @@
 {
   "name": "unbroken-markdown",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Fix broken markdown formatting by moving punctuation outside bold/italic text and removing incomplete image markdown during streaming",
   "keywords": [
