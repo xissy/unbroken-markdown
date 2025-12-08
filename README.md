@@ -9,6 +9,8 @@ When markdown is streamed or improperly formatted, you might see broken renderin
 - `**"text"**` → `"**text**"` (quotes outside bold)
 - `*text(info)*` → `*text*(info)` (parentheses outside italic)
 - `**50%**` → `**50**%` (percentage outside bold)
+- `**<text>**` → `<**text**>` (angle brackets outside bold)
+- `**『책 제목』**` → `『**책 제목**』` (Korean quotation marks)
 - Incomplete image markdown removal during streaming
 
 ## Installation
@@ -44,6 +46,8 @@ console.log(italicOutput); // *text*(info)
 - Parentheses: `**text(info)**` → `**text**(info)`
 - Percentages: `**50%**` → `**50**%`
 - Links: `**[text](url)**` → `[**text**](url)`
+- Angle brackets: `**<text>**` → `<**text**>`
+- Korean brackets: `**『text』**` → `『**text**』`, `**「text」**` → `「**text**」`, `**《text》**` → `《**text**》`, `**〈text〉**` → `〈**text**〉`
 
 ### Italic Pattern Fixes
 
@@ -51,6 +55,8 @@ console.log(italicOutput); // *text*(info)
 - Parentheses: `*text(info)*` → `*text*(info)`
 - Percentages: `*50%*` → `*50*%`
 - Links: `*[text](url)*` → `[*text*](url)`
+- Angle brackets: `*<text>*` → `<*text*>`
+- Korean brackets: `*『text』*` → `『*text*』`, `*「text」*` → `「*text*」`, `*《text》*` → `《*text*》`, `*〈text〉*` → `〈*text*〉`
 
 ### Streaming Support
 
@@ -96,6 +102,14 @@ const output = unbreak(input);
 const input = "**'Church of Light'** mentioned";
 const output = unbreak(input);
 // Output: '**Church of Light**' mentioned
+```
+
+### Korean quotation marks
+
+```typescript
+const input = '**『책의 제목』**을 표기할 때 사용해요.';
+const output = unbreak(input);
+// Output: 『**책의 제목**』을 표기할 때 사용해요.
 ```
 
 ## Use Cases
