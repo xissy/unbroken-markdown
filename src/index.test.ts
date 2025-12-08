@@ -269,5 +269,82 @@ Guillermo는 "**개발자가 새 노트북을 받을 때 느끼는 쾌적한 준
         '마지막으로 등장하는 논의는 **LLM이 이미 자체적으로 문제 생성기를 만들고, 정답지도 만들 수 있다면 이런 데이터 변환의 실질적 가치는 무엇인가**?라는 물음이다.';
       expect(unbreak(input)).toBe(expected);
     });
+
+    test('should correctly format angle brackets outside of italic text', () => {
+      const input = '*<Some text>*';
+      const expected = '<*Some text*>';
+      expect(unbreak(input)).toBe(expected);
+    });
+  });
+
+  describe('Angle bracket rules', () => {
+    test('should correctly format angle brackets outside of bold text', () => {
+      const input = '**<실패를 통과하는 일>**';
+      const expected = '<**실패를 통과하는 일**>';
+      expect(unbreak(input)).toBe(expected);
+    });
+
+    test('should correctly format angle brackets with surrounding quotes', () => {
+      const input = '"**<실패를 통과하는 일>**"';
+      const expected = '"<**실패를 통과하는 일**>"';
+      expect(unbreak(input)).toBe(expected);
+    });
+
+    test('should handle angle brackets with English text', () => {
+      const input = '**<Important Notice>**';
+      const expected = '<**Important Notice**>';
+      expect(unbreak(input)).toBe(expected);
+    });
+
+    test('should handle multiple angle bracket patterns', () => {
+      const input = '**<First>** and **<Second>**';
+      const expected = '<**First**> and <**Second**>';
+      expect(unbreak(input)).toBe(expected);
+    });
+
+    test('should not affect bold patterns without angle brackets', () => {
+      const input = '**Normal bold text** and <**already correct**>';
+      const expected = '**Normal bold text** and <**already correct**>';
+      expect(unbreak(input)).toBe(expected);
+    });
+  });
+
+  describe('Korean bracket rules', () => {
+    test('should format 겹낫표 (『』) outside of bold text', () => {
+      const input = '**『책의 제목』**을 표기할 때 사용해요.';
+      const expected = '『**책의 제목**』을 표기할 때 사용해요.';
+      expect(unbreak(input)).toBe(expected);
+    });
+
+    test('should format 낫표 (「」) outside of bold text', () => {
+      const input = '**「글의 제목」**이나 소제목 등을 나타낼 때 써요.';
+      const expected = '「**글의 제목**」이나 소제목 등을 나타낼 때 써요.';
+      expect(unbreak(input)).toBe(expected);
+    });
+
+    test('should format 겹화살괄호 (《》) outside of bold text', () => {
+      const input = '**《행사, 전시, 예술작품 연작》** 등을 표기할 때 사용해요.';
+      const expected = '《**행사, 전시, 예술작품 연작**》 등을 표기할 때 사용해요.';
+      expect(unbreak(input)).toBe(expected);
+    });
+
+    test('should format 홑화살괄호 (〈〉) outside of bold text', () => {
+      const input = '**〈미술, 강연, 영화, 예술작품〉** 등의 개별 작품명을 표기할 때 적합해요.';
+      const expected = '〈**미술, 강연, 영화, 예술작품**〉 등의 개별 작품명을 표기할 때 적합해요.';
+      expect(unbreak(input)).toBe(expected);
+    });
+
+    test('should format Korean brackets outside of italic text', () => {
+      expect(unbreak('*『책 제목』*')).toBe('『*책 제목*』');
+      expect(unbreak('*「글 제목」*')).toBe('「*글 제목*」');
+      expect(unbreak('*《전시회》*')).toBe('《*전시회*》');
+      expect(unbreak('*〈작품명〉*')).toBe('〈*작품명*〉');
+    });
+
+    test('should handle multiple Korean brackets in one line', () => {
+      const input = '**『첫 번째 책』**과 **『두 번째 책』**을 읽었습니다.';
+      const expected = '『**첫 번째 책**』과 『**두 번째 책**』을 읽었습니다.';
+      expect(unbreak(input)).toBe(expected);
+    });
   });
 });
