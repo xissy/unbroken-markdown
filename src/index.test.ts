@@ -347,4 +347,40 @@ Guillermo는 "**개발자가 새 노트북을 받을 때 느끼는 쾌적한 준
       expect(unbreak(input)).toBe(expected);
     });
   });
+
+  describe('Inline code rules', () => {
+    test('should remove bold wrapping around inline code', () => {
+      expect(unbreak('**`Jules`**')).toBe('`Jules`');
+    });
+
+    test('should remove italic wrapping around inline code', () => {
+      expect(unbreak('*`Jules`*')).toBe('`Jules`');
+    });
+
+    test('should handle inline code in a sentence', () => {
+      const input = '**`Jules`**는 Google의 AI 코딩 에이전트입니다.';
+      const expected = '`Jules`는 Google의 AI 코딩 에이전트입니다.';
+      expect(unbreak(input)).toBe(expected);
+    });
+
+    test('should handle multiple inline code bold patterns', () => {
+      const input = '**`React`**와 **`Vue`**는 프론트엔드 프레임워크입니다.';
+      const expected = '`React`와 `Vue`는 프론트엔드 프레임워크입니다.';
+      expect(unbreak(input)).toBe(expected);
+    });
+
+    test('should not match when bold wraps more than just inline code', () => {
+      const input = '**`text` and more**';
+      expect(unbreak(input)).toBe(input);
+    });
+
+    test('should not match inline code across newlines', () => {
+      const input = '**`text\nmore`**';
+      expect(unbreak(input)).toBe(input);
+    });
+
+    test('should handle bold+italic (***) wrapping inline code', () => {
+      expect(unbreak('***`text`***')).toBe('`text`');
+    });
+  });
 });

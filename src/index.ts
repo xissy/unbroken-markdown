@@ -154,6 +154,12 @@ export function unbreak(markdown: string): string {
   result = result.replaceAll('\u201C', '"');
   result = result.replaceAll('\u201D', '"');
 
+  // Remove bold/italic wrapping around inline code
+  // Inline code already has visual distinction (monospace + background), bold/italic is redundant
+  // Must be applied before other rules to prevent interference (e.g., parentheses rules breaking backtick boundaries)
+  result = result.replaceAll(/\*\*`([^`\n]+)`\*\*/g, '`$1`');
+  result = result.replaceAll(/(?<!\*)\*`([^`\n]+)`\*(?!\*)/g, '`$1`');
+
   // Simple approach: only convert **"text"** that comes after space or line start
   // This way "**text**" pattern is not converted
   result = result.replaceAll(/(^|\s)\*\*"([^"]+)"\*\*/g, '$1"**$2**"');
