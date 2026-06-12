@@ -15,15 +15,33 @@
   ],
   "author": "Taeho Kim",
   "license": "MIT",
-  "main": "dist/index.js",
-  "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xissy/unbroken-markdown.git"
+  },
+  "bugs": {
+    "url": "https://github.com/xissy/unbroken-markdown/issues"
+  },
+  "homepage": "https://github.com/xissy/unbroken-markdown#readme",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "require": "./dist/index.js",
-      "import": "./dist/index.mjs",
-      "types": "./dist/index.d.ts"
-    }
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "dist",
@@ -31,10 +49,8 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "bun run build:cjs && bun run build:esm && bun run build:types",
-    "build:cjs": "esbuild src/index.ts --bundle --platform=node --format=cjs --outfile=dist/index.js",
-    "build:esm": "esbuild src/index.ts --bundle --platform=node --format=esm --outfile=dist/index.mjs",
-    "build:types": "tsc --declaration --emitDeclarationOnly --outDir dist",
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint src --ext .ts,.tsx",
@@ -48,9 +64,9 @@
     "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^8.35.1",
     "@typescript-eslint/parser": "^8.35.1",
-    "esbuild": "^0.19.0",
     "eslint": "^9.30.1",
     "prettier": "^3.4.2",
+    "tsup": "^8.5.1",
     "typescript": "^5.0.0",
     "vitest": "^1.0.0"
   }
