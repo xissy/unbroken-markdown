@@ -1,4 +1,11 @@
 /**
+ * Question mark handling (e.g., **text?** → **text**?)
+ * Kept as a named rule so it can be disabled via the moveQuestionMark option,
+ * since bolding a whole question (e.g. **Really?**) can be intentional
+ */
+const BOLD_QUESTION_MARK_RULE: [RegExp, string] = [/\*\*([^?]+?)\?\*\*/g, '**$1**?'];
+
+/**
  * Transformation rules to move punctuation outside of bold markdown
  * Each rule is in the format [regex, replacement string]
  */
@@ -21,8 +28,7 @@ const PUNCTUATION_RULES: Array<[RegExp, string]> = [
   // Percentage sign handling (e.g., **21%** → **21**%)
   // Use [^%]+? to prevent bold % only
   [/\*\*([^%]+?)%\*\*/g, '**$1**%'],
-  // Question mark handling (e.g., **text?** → **text**?)
-  [/\*\*([^?]+?)\?\*\*/g, '**$1**?'],
+  BOLD_QUESTION_MARK_RULE,
   // Angle brackets handling (e.g., **<text>** → <**text**>)
   [/\*\*<([^<>*\n]+)>\*\*/g, '<**$1**>'],
   // Korean brackets handling
@@ -168,19 +174,48 @@ function restoreSegments(text: string, store: string[], tag: string): string {
 }
 
 /**
+ * Options for the unbreak function
+ */
+export interface UnbreakOptions {
+  /**
+   * Remove trailing incomplete image markdown (e.g. `![alt](https://…` cut
+   * off mid-stream). Enable this for intermediate chunks while streaming;
+   * leave it off for complete documents, where a trailing `!` or `![` is
+   * legitimate content and must not be removed.
+   * @default false
+   */
+  streaming?: boolean;
+  /**
+   * Normalize Unicode smart quotes (‘ ’ “ ”) to ASCII quotes (' ") so that
+   * the quote-related rules can match them.
+   * @default true
+   */
+  normalizeQuotes?: boolean;
+  /**
+   * Move a trailing question mark outside bold (**text?** → **text**?).
+   * Disable if bolding whole questions is intentional in your content.
+   * @default true
+   */
+  moveQuestionMark?: boolean;
+}
+
+/**
  * Fixes broken markdown to ensure proper rendering.
  *
  * Main features:
  * 1. Move punctuation outside of Bold/Italic text for better typography
- * 2. Remove incomplete image markdown during streaming for rendering stability
+ * 2. With `streaming: true`, remove incomplete image markdown for rendering stability
  *
  * Code segments (fenced code blocks and inline code) are never modified.
  *
  * @param markdown - The markdown string to fix
+ * @param options - Optional behavior toggles
  * @returns Unbroken markdown string
  */
-export function unbreak(markdown: string): string {
+export function unbreak(markdown: string, options: UnbreakOptions = {}): string {
   if (!markdown) return markdown;
+
+  const { streaming = false, normalizeQuotes = true, moveQuestionMark = true } = options;
 
   let result = markdown;
 
@@ -200,10 +235,12 @@ export function unbreak(markdown: string): string {
   result = maskSegments(result, INLINE_CODE_PATTERN, inlineCodes, 'CODE');
 
   // Normalize Unicode quotes to ASCII
-  result = result.replaceAll('\u2018', "'");
-  result = result.replaceAll('\u2019', "'");
-  result = result.replaceAll('\u201C', '"');
-  result = result.replaceAll('\u201D', '"');
+  if (normalizeQuotes) {
+    result = result.replaceAll('\u2018', "'");
+    result = result.replaceAll('\u2019', "'");
+    result = result.replaceAll('\u201C', '"');
+    result = result.replaceAll('\u201D', '"');
+  }
 
   // Simple approach: only convert **"text"** that comes after space or line start
   // This way "**text**" pattern is not converted
@@ -229,7 +266,7 @@ export function unbreak(markdown: string): string {
   const nonQuoteRules = PUNCTUATION_RULES.filter(([pattern]) => {
     const patternStr = pattern.toString();
     return !patternStr.includes('"') && !patternStr.includes("'");
-  });
+  }).filter((rule) => moveQuestionMark || rule !== BOLD_QUESTION_MARK_RULE);
 
   for (const [pattern, replacement] of nonQuoteRules) {
     result = result.replaceAll(pattern, replacement);
@@ -246,9 +283,12 @@ export function unbreak(markdown: string): string {
     result = result.replaceAll(pattern, replacement);
   }
 
-  // Remove incomplete image markdown
-  for (const pattern of INCOMPLETE_IMAGE_PATTERNS) {
-    result = result.replace(pattern, '');
+  // Remove incomplete image markdown (only while streaming — on a complete
+  // document a trailing "!" or "![" is legitimate content)
+  if (streaming) {
+    for (const pattern of INCOMPLETE_IMAGE_PATTERNS) {
+      result = result.replace(pattern, '');
+    }
   }
 
   // Restore masked code segments

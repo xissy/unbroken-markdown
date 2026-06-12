@@ -432,4 +432,60 @@ Guillermo는 "**개발자가 새 노트북을 받을 때 느끼는 쾌적한 준
       expect(unbreak(input)).toBe(expected);
     });
   });
+
+  describe('Options', () => {
+    describe('streaming', () => {
+      test('should keep a trailing exclamation mark by default', () => {
+        expect(unbreak('Hello world!')).toBe('Hello world!');
+        expect(unbreak('정말 멋져요!')).toBe('정말 멋져요!');
+      });
+
+      test('should keep trailing partial image syntax by default', () => {
+        expect(unbreak('각주 참고![')).toBe('각주 참고![');
+        expect(unbreak('![alt text')).toBe('![alt text');
+      });
+
+      test('should remove a trailing incomplete image link when streaming', () => {
+        expect(unbreak('본문 ![이미지](https://example.com/a.pn', { streaming: true })).toBe(
+          '본문 '
+        );
+      });
+
+      test('should remove trailing partial image markers when streaming', () => {
+        expect(unbreak('본문 ![alt text', { streaming: true })).toBe('본문 ');
+        expect(unbreak('본문 ![', { streaming: true })).toBe('본문 ');
+        expect(unbreak('본문 !', { streaming: true })).toBe('본문 ');
+      });
+
+      test('should keep a complete image when streaming', () => {
+        const input = '![alt](https://example.com/a.png)';
+        expect(unbreak(input, { streaming: true })).toBe(input);
+      });
+    });
+
+    describe('normalizeQuotes', () => {
+      test('should normalize smart quotes by default', () => {
+        expect(unbreak('‘인용’과 “인용”')).toBe('\'인용\'과 "인용"');
+      });
+
+      test('should keep smart quotes when disabled', () => {
+        const input = '‘인용’과 “인용”';
+        expect(unbreak(input, { normalizeQuotes: false })).toBe(input);
+      });
+    });
+
+    describe('moveQuestionMark', () => {
+      test('should move a trailing question mark outside bold by default', () => {
+        expect(unbreak('**Really?**')).toBe('**Really**?');
+      });
+
+      test('should keep the question mark inside bold when disabled', () => {
+        expect(unbreak('**Really?**', { moveQuestionMark: false })).toBe('**Really?**');
+      });
+
+      test('should not affect other rules when disabled', () => {
+        expect(unbreak('**21%**', { moveQuestionMark: false })).toBe('**21**%');
+      });
+    });
+  });
 });
