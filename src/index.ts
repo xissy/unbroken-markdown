@@ -134,11 +134,47 @@ const INCOMPLETE_IMAGE_PATTERNS: RegExp[] = [
 ];
 
 /**
+ * Fenced code blocks (``` or ~~~), including an unclosed trailing fence
+ * so that partially streamed code blocks are also protected
+ */
+const FENCED_CODE_PATTERN = /(`{3,}|~{3,})[\s\S]*?(?:\1|$)/g;
+
+/**
+ * Inline code spans (single line, backtick-delimited)
+ */
+const INLINE_CODE_PATTERN = /(`+)[^`\n]+?\1(?!`)/g;
+
+/**
+ * Replaces each match of `pattern` with a placeholder (\x00<tag><index>\x00)
+ * and stores the original text in `store` for later restoration.
+ * The placeholder contains no characters that transformation rules can match,
+ * so masked segments pass through all rules untouched.
+ */
+function maskSegments(text: string, pattern: RegExp, store: string[], tag: string): string {
+  return text.replace(pattern, (match) => {
+    store.push(match);
+    return `\x00${tag}${store.length - 1}\x00`;
+  });
+}
+
+/**
+ * Restores placeholders created by maskSegments back to their original text
+ */
+function restoreSegments(text: string, store: string[], tag: string): string {
+  return text.replace(
+    new RegExp(`\\x00${tag}(\\d+)\\x00`, 'g'),
+    (_, index) => store[Number(index)]
+  );
+}
+
+/**
  * Fixes broken markdown to ensure proper rendering.
  *
  * Main features:
  * 1. Move punctuation outside of Bold/Italic text for better typography
  * 2. Remove incomplete image markdown during streaming for rendering stability
+ *
+ * Code segments (fenced code blocks and inline code) are never modified.
  *
  * @param markdown - The markdown string to fix
  * @returns Unbroken markdown string
@@ -148,17 +184,26 @@ export function unbreak(markdown: string): string {
 
   let result = markdown;
 
+  // Mask fenced code blocks first so no rule (including quote normalization
+  // and inline-code unwrapping) can touch their content
+  const fencedBlocks: string[] = [];
+  result = maskSegments(result, FENCED_CODE_PATTERN, fencedBlocks, 'FENCE');
+
+  // Remove bold/italic wrapping around inline code
+  // Inline code already has visual distinction (monospace + background), bold/italic is redundant
+  // Must be applied before inline code masking, since it matches the backticks themselves
+  result = result.replaceAll(/\*\*`([^`\n]+)`\*\*/g, '`$1`');
+  result = result.replaceAll(/(?<!\*)\*`([^`\n]+)`\*(?!\*)/g, '`$1`');
+
+  // Mask inline code spans so the remaining rules cannot alter their content
+  const inlineCodes: string[] = [];
+  result = maskSegments(result, INLINE_CODE_PATTERN, inlineCodes, 'CODE');
+
   // Normalize Unicode quotes to ASCII
   result = result.replaceAll('\u2018', "'");
   result = result.replaceAll('\u2019', "'");
   result = result.replaceAll('\u201C', '"');
   result = result.replaceAll('\u201D', '"');
-
-  // Remove bold/italic wrapping around inline code
-  // Inline code already has visual distinction (monospace + background), bold/italic is redundant
-  // Must be applied before other rules to prevent interference (e.g., parentheses rules breaking backtick boundaries)
-  result = result.replaceAll(/\*\*`([^`\n]+)`\*\*/g, '`$1`');
-  result = result.replaceAll(/(?<!\*)\*`([^`\n]+)`\*(?!\*)/g, '`$1`');
 
   // Simple approach: only convert **"text"** that comes after space or line start
   // This way "**text**" pattern is not converted
@@ -205,6 +250,10 @@ export function unbreak(markdown: string): string {
   for (const pattern of INCOMPLETE_IMAGE_PATTERNS) {
     result = result.replace(pattern, '');
   }
+
+  // Restore masked code segments
+  result = restoreSegments(result, inlineCodes, 'CODE');
+  result = restoreSegments(result, fencedBlocks, 'FENCE');
 
   return result;
 }

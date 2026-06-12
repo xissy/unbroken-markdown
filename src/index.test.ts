@@ -383,4 +383,53 @@ Guillermo는 "**개발자가 새 노트북을 받을 때 느끼는 쾌적한 준
       expect(unbreak('***`text`***')).toBe('`text`');
     });
   });
+
+  describe('Code segment protection', () => {
+    test('should not modify content inside fenced code blocks', () => {
+      const input = '```md\n**"text"**\n```';
+      expect(unbreak(input)).toBe(input);
+    });
+
+    test('should not modify fenced code blocks with language and surrounding text', () => {
+      const input = '아래 예시를 보세요.\n\n```ts\nconst x = unbreak(\'**"x"**\');\n```\n\n끝.';
+      expect(unbreak(input)).toBe(input);
+    });
+
+    test('should not normalize smart quotes inside fenced code blocks', () => {
+      const input = '```\nconst s = ‘smart’ + “quotes”;\n```';
+      expect(unbreak(input)).toBe(input);
+    });
+
+    test('should not modify tilde-fenced code blocks', () => {
+      const input = '~~~\n**50%**\n~~~';
+      expect(unbreak(input)).toBe(input);
+    });
+
+    test('should not modify an unclosed fenced code block during streaming', () => {
+      const input = '설명 텍스트\n\n```js\nconst pct = "**50%**";';
+      expect(unbreak(input)).toBe(input);
+    });
+
+    test('should not modify content inside inline code', () => {
+      const input = 'use `**"x"**` literally';
+      expect(unbreak(input)).toBe(input);
+    });
+
+    test('should not normalize smart quotes inside inline code', () => {
+      const input = '인라인 코드 `‘quoted’` 예시';
+      expect(unbreak(input)).toBe(input);
+    });
+
+    test('should still fix patterns outside code segments', () => {
+      const input = '**"제목"** 설명\n\n```\n**"코드 안"**\n```\n\n그리고 **21%** 증가';
+      const expected = '"**제목**" 설명\n\n```\n**"코드 안"**\n```\n\n그리고 **21**% 증가';
+      expect(unbreak(input)).toBe(expected);
+    });
+
+    test('should still strip bold wrapping around inline code', () => {
+      const input = '**`Jules`**는 도구입니다. 코드 안 `**"x"**`는 유지.';
+      const expected = '`Jules`는 도구입니다. 코드 안 `**"x"**`는 유지.';
+      expect(unbreak(input)).toBe(expected);
+    });
+  });
 });
