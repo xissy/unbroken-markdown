@@ -60,19 +60,38 @@ console.log(italicOutput); // *text*(info)
 
 ### Streaming Support
 
-- Removes incomplete image markdown patterns
+With `streaming: true`:
+
+- Removes incomplete image markdown patterns (e.g. `![alt](https://…` cut off mid-stream)
 - Handles partial markdown during real-time streaming
 - Ensures consistent rendering even with interrupted markdown
 
+```typescript
+// While streaming, run intermediate chunks with streaming: true
+const partial = unbreak(accumulatedText, { streaming: true });
+
+// Run the final, complete document without it so legitimate
+// trailing "!" or "![" content is preserved
+const final = unbreak(fullText);
+```
+
+### Code Segment Protection
+
+Fenced code blocks (` ``` ` and `~~~`, including a not-yet-closed fence during streaming) and inline code spans are never modified.
+
 ## API
 
-### `unbreak(markdown: string): string`
+### `unbreak(markdown: string, options?: UnbreakOptions): string`
 
 The main function that processes and fixes broken markdown text.
 
 **Parameters:**
 
 - `markdown` - The markdown string to process
+- `options` - Optional behavior toggles:
+  - `streaming` (default `false`) - Remove trailing incomplete image markdown. Enable for intermediate chunks while streaming; leave off for complete documents.
+  - `normalizeQuotes` (default `true`) - Normalize Unicode smart quotes (`‘ ’ “ ”`) to ASCII quotes so quote rules can match them.
+  - `moveQuestionMark` (default `true`) - Move a trailing question mark outside bold (`**text?**` → `**text**?`).
 
 **Returns:**
 
