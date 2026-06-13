@@ -48,6 +48,18 @@ console.log(italicOutput); // *text*(info)
 - Links: `**[text](url)**` → `[**text**](url)`
 - Angle brackets: `**<text>**` → `<**text**>`
 - Korean brackets: `**『text』**` → `『**text**』`, `**「text」**` → `「**text**」`, `**《text》**` → `《**text**》`, `**〈text〉**` → `〈**text**〉`
+- CJK brackets: `**【text】**` → `【**text**】`, `**〔text〕**` → `〔**text**〕`, `**（text）**` → `（**text**）`
+
+### CJK Flanking Fixes
+
+CommonMark's right-flanking rule rejects a closing delimiter that is preceded by punctuation and directly followed by a letter. In CJK text the next clause or particle attaches with no space, so patterns like these fail to render entirely. When (and only when) a letter or number follows the closing delimiter directly, trailing punctuation is moved outside:
+
+- ASCII: `**제목:**내용` → `**제목**:내용`, `**대박!**이라고` → `**대박**!이라고` (also `.` `,` `;` `~`)
+- Full-width: `**質問？**に` → `**質問**？に`, `**文章。**次` → `**文章**。次` (also `！` `、` `，` `：` `；` `…` `．` `～`)
+- Full-width parenthetical: `**텍스트（설명）**뒤에` → `**텍스트**（설명）뒤에`
+- GFM strikethrough: `~~취소!~~라고` → `~~취소~~!라고`
+
+Patterns that already render — `**Note:** text` (space after), `**文章。**` (end of input) — are left untouched.
 
 ### Italic Pattern Fixes
 

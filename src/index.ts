@@ -40,6 +40,12 @@ const PUNCTUATION_RULES: Array<[RegExp, string]> = [
   [/\*\*《([^《》*\n]+)》\*\*/g, '《**$1**》'],
   // 홑화살괄호 (artworks): **〈text〉** → 〈**text**〉
   [/\*\*〈([^〈〉*\n]+)〉\*\*/g, '〈**$1**〉'],
+  // Full-width parentheses: **（text）** → （**text**）
+  [/\*\*（([^（）*\n]+)）\*\*/g, '（**$1**）'],
+  // Black lenticular brackets (CJK notices/emphasis): **【text】** → 【**text**】
+  [/\*\*【([^【】*\n]+)】\*\*/g, '【**$1**】'],
+  // Tortoise shell brackets: **〔text〕** → 〔**text**〕
+  [/\*\*〔([^〔〕*\n]+)〕\*\*/g, '〔**$1**〕'],
 ];
 
 /**
@@ -75,6 +81,41 @@ const ITALIC_PUNCTUATION_RULES: Array<[RegExp, string]> = [
   [/(?<!\*)\*《([^《》*\n]+)》\*(?!\*)/g, '《*$1*》'],
   // 홑화살괄호 (artworks): *〈text〉* → 〈*text*〉
   [/(?<!\*)\*〈([^〈〉*\n]+)〉\*(?!\*)/g, '〈*$1*〉'],
+  // Full-width parentheses: *（text）* → （*text*）
+  [/(?<!\*)\*（([^（）*\n]+)）\*(?!\*)/g, '（*$1*）'],
+  // Black lenticular brackets: *【text】* → 【*text*】
+  [/(?<!\*)\*【([^【】*\n]+)】\*(?!\*)/g, '【*$1*】'],
+  // Tortoise shell brackets: *〔text〕* → 〔*text*〕
+  [/(?<!\*)\*〔([^〔〕*\n]+)〕\*(?!\*)/g, '〔*$1*〕'],
+];
+
+/**
+ * Trailing punctuation that breaks CommonMark emphasis in CJK text.
+ *
+ * Per the right-flanking rule, a closing delimiter preceded by punctuation
+ * only counts when it is followed by whitespace or punctuation. In CJK text,
+ * particles and the next clause attach with no space (e.g. **제목:**내용,
+ * **文章。**次), so the emphasis fails to render. These rules move the
+ * trailing punctuation outside the delimiter, but ONLY when a letter or
+ * number follows directly — **Note:** followed by a space renders fine and
+ * must stay untouched.
+ *
+ * ASCII ? and % are excluded here: they are handled unconditionally by the
+ * dedicated rules above. ASCII ~ only breaks plain CommonMark (GFM's
+ * strikethrough tokenizer changes its handling); moving it out is safe in
+ * both dialects.
+ */
+const TRAILING_PUNCT = '[:!.,;~？！。、，：；…．～]';
+const CJK_FLANKING_RULES: Array<[RegExp, string]> = [
+  // Bold: **제목:**내용 → **제목**:내용
+  [new RegExp(`\\*\\*([^*\\n]+?)(${TRAILING_PUNCT}+)\\*\\*(?=[\\p{L}\\p{N}])`, 'gu'), '**$1**$2'],
+  // Italic: *제목:*내용 → *제목*:내용
+  [new RegExp(`(?<!\\*)\\*([^*\\n]+?)(${TRAILING_PUNCT}+)\\*(?=[\\p{L}\\p{N}])`, 'gu'), '*$1*$2'],
+  // Full-width parenthetical before attached text: **텍스트（설명）**뒤 → **텍스트**（설명）뒤
+  [/\*\*([^*\n]+?)(（[^*\n（）]+?）)\*\*(?=[\p{L}\p{N}])/gu, '**$1**$2'],
+  [/(?<!\*)\*([^*\n]+?)(（[^*\n（）]+?）)\*(?=[\p{L}\p{N}])/gu, '*$1*$2'],
+  // GFM strikethrough: ~~취소!~~라고 → ~~취소~~!라고 (same flanking constraint)
+  [/(?<!~)~~([^~\n]+?)([:!.,;？！。、，：；…．]+)~~(?!~)(?=[\p{L}\p{N}])/gu, '~~$1~~$2'],
 ];
 
 /**
@@ -280,6 +321,12 @@ export function unbreak(markdown: string, options: UnbreakOptions = {}): string 
   });
 
   for (const [pattern, replacement] of nonQuoteItalicRules) {
+    result = result.replaceAll(pattern, replacement);
+  }
+
+  // Fix CJK flanking breakage: trailing punctuation directly followed by a
+  // letter/number prevents the closing delimiter from being right-flanking
+  for (const [pattern, replacement] of CJK_FLANKING_RULES) {
     result = result.replaceAll(pattern, replacement);
   }
 
