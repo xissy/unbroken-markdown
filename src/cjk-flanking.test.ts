@@ -224,6 +224,35 @@ describe('CJK flanking fixes', () => {
   });
 
   describe('rendering verification of pre-existing rules', () => {
+    test.each(['**', '*'])('ASCII parenthetical duration with %s emphasis', (marker) => {
+      const input = `${marker}1,376분(약 22시간 56분)${marker}으로,`;
+      const expected = `${marker}1,376분${marker}(약 22시간 56분)으로,`;
+      expectFixed(input, expected);
+
+      const tag = marker === '**' ? 'strong' : 'em';
+      const html = `<p><${tag}>1,376분</${tag}>(약 22시간 56분)으로,</p>`;
+      expect(micromark(unbreak(input))).toBe(html);
+      expect(render(unbreak(input))).toBe(html);
+      expect(unbreak(input, { streaming: true })).toBe(expected);
+    });
+
+    test('reported activity summary preserves both bold spans and all surrounding text', () => {
+      const prefix = '오늘(2026년 10월 19일 월요일) 하루 동안 기록된 AI 에이전트 작업은 총 ';
+      const middle = ', 활성 작업 시간 기준 ';
+      const suffix = '으로, 주말(토·일)의 기록을 뛰어넘는 역대 최대 작업량을 경신했습니다.';
+      const input = `${prefix}**25건**${middle}**1,376분(약 22시간 56분)**${suffix}`;
+      const expected = `${prefix}**25건**${middle}**1,376분**(약 22시간 56분)${suffix}`;
+      const brokenHtml = `<p>${prefix}<strong>25건</strong>${middle}**1,376분(약 22시간 56분)**${suffix}</p>`;
+      const fixedHtml = `<p>${prefix}<strong>25건</strong>${middle}<strong>1,376분</strong>(약 22시간 56분)${suffix}</p>`;
+
+      for (const parser of [micromark, render]) {
+        expect(parser(input)).toBe(brokenHtml);
+        expect(parser(unbreak(input))).toBe(fixedHtml);
+      }
+      expect(unbreak(input)).toBe(expected);
+      expect(unbreak(expected)).toBe(expected);
+    });
+
     test('Korean corner brackets', () => {
       expectFixed('**「제목」**을 읽다', '「**제목**」을 읽다');
     });
